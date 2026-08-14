@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Fieldnotes — Symptom & Cycle Tracker</title>
+<meta name="theme-color" content="#3F6B54">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --paper:#F4F6F2;
+  --paper-raised:#FFFFFF;
+  --ink:#1D261C;
+  --ink-soft:#4B564E;
+  --ink-faint:#7C877E;
+  --moss:#3F6B54;
+  --moss-deep:#2C4E3C;
+  --moss-pale:#E3ECE4;
+  --moss-pale-2:#D3E1D6;
+  --berry:#8C3F5A;
+  --berry-pale:#F3E3E8;
+  --amber:#B4801F;
+  --amber-pale:#F5EAD4;
+  --clay:#A85A34;
+  --clay-pale:#F1E1D5;
+  --sage-mild:#4F8A63;
+  --sage-mild-pale:#E1EEE5;
+  --teal:#3B7A82;
+  --plum:#6B4C7A;
+  --gold:#8C7A1F;
+  --slate:#556477;
+  --rose:#A8506B;
+  --border:#DBE3D8;
+  --border-strong:#C3CFC0;
+  --radius:14px;
+  --radius-sm:9px;
+  --shadow:0 1px 2px rgba(29,38,28,0.06), 0 4px 14px rgba(29,38,28,0.06);
+  --font-display:'Fraunces', serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --nav-h:64px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#3B3E41;
+    --paper-raised:#46494C;
+    --ink:#F1F2F0;
+    --ink-soft:#C7C9C7;
+    --ink-faint:#9A9C9B;
+    --moss:#8DBEA0;
+    --moss-deep:#A9D3BB;
+    --moss-pale:#454F4A;
+    --moss-pale-2:#505B55;
+    --berry-pale:#4A3B41;
+    --amber-pale:#4A4235;
+    --clay-pale:#4A3D34;
+    --sage-mild-pale:#3E4941;
+    --teal:#8ACBD3;
+    --plum:#C7ACD6;
+    --gold:#E0C767;
+    --slate:#AEBBCB;
+    --rose:#E7A5BE;
+    --border:#54575A;
+    --border-strong:#63666A;
+    --shadow:0 1px 2px rgba(0,0,0,0.3), 0 4px 14px rgba(0,0,0,0.35);
+  }
+}
+
+*{box-sizing:border-box;}
+html{-webkit-tap-highlight-color:transparent;}
+body{
+  margin:0;
+  font-family:var(--font-body);
+  background:var(--paper);
+  color:var(--ink);
+  line-height:1.5;
+  padding-bottom:calc(var(--nav-h) + 14px);
+}
+.wrap{max-width:520px;margin:0 auto;padding:18px 16px 8px;}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;margin:0 0 4px;letter-spacing:-0.01em;}
+p{margin:0;}
+button{font-family:inherit;}
+:focus-visible{outline:3px solid var(--moss);outline-offset:2px;border-radius:6px;}
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+@media (prefers-reduced-motion: reduce){*{animation-duration:0.001ms !important;transition-duration:0.001ms !important;}}
+
+/* ============ TOP HEADER ============ */
+.top-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;}
+.brand{display:flex;align-items:baseline;gap:8px;}
+.brand h1{font-size:22px;}
+.brand .today{font-size:12.5px;color:var(--ink-faint);}
+.streak-ring{position:relative;width:52px;height:52px;flex-shrink:0;}
+.streak-ring svg{width:52px;height:52px;transform:rotate(-90deg);}
+.streak-ring circle{fill:none;stroke-width:5;}
+.streak-ring .track{stroke:var(--moss-pale-2);}
+.streak-ring .fill{stroke:var(--moss);stroke-linecap:round;transition:stroke-dashoffset .4s ease;}
+.streak-ring .count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:600;font-size:15px;color:var(--moss-deep);}
+
+/* ============ CARDS / SECTIONS ============ */
+.card{background:var(--paper-raised);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:14px;}
+.card h2{font-size:15px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;font-family:var(--font-body);font-weight:600;margin-bottom:10px;}
+.section-title{font-size:19px;margin-bottom:2px;}
+.subtle{color:var(--ink-faint);font-size:13px;}
+
+/* ============ PREDICTIONS UI ============ */
+.prediction-box { background: var(--moss-pale); padding: 12px; border-radius: 8px; margin: 12px 0; font-size: 13.5px; }
+.prediction-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.prediction-row:last-child { margin-bottom: 0; }
+.prediction-label { font-weight: 600; color: var(--moss-deep); }
+.prediction-value { color: var(--ink); }
+
+/* ============ BUTTONS ============ */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--moss);color:#fff;border:none;border-radius:var(--radius-sm);
+  padding:13px 16px;font-size:15px;font-weight:600;cursor:pointer;width:100%;
+  transition:background .15s ease, transform .05s ease;
+}
+.btn:hover{background:var(--moss-deep);}
+.btn:active{transform:scale(0.98);}
+.btn.secondary{background:var(--moss-pale);color:var(--moss-deep);}
+.btn.secondary:hover{background:var(--moss-pale-2);}
+.btn.ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--border-strong);}
+.btn.ghost:hover{background:var(--moss-pale);}
+.btn.danger{background:var(--berry-pale);color:var(--berry);}
+.btn.danger:hover{background:#e9c9d3;}
+.btn.small{padding:9px 12px;font-size:13.5px;width:auto;}
+.btn-row{display:flex;gap:10px;}
+.btn-row .btn{flex:1;}
+@media (max-width:420px){.btn-row{flex-direction:column;}}
+
+.chip-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;}
+.chip-btn{
+  background:var(--paper-raised);border:1.5px solid var(--border);color:var(--ink);
+  border-radius:var(--radius-sm);padding:13px 14px;font-size:14.5px;font-weight:500;
+  text-align:left;cursor:pointer;transition:border-color .15s, background .15s;
+}
+.chip-btn:hover{border-color:var(--moss);background:var(--moss-pale);}
+.chip-btn.add-new{border-style:dashed;color:var(--moss-deep);font-weight:600;}
+
+.chip-wrap { position:relative; display:flex; }
+.chip-wrap .chip-btn { flex:1; }
+.chip-del-btn {
+  position:absolute; right:4px; top:50%; transform:translateY(-50%);
+  background:transparent; border:none; color:var(--ink-faint);
+  font-size:20px; width:32px; height:32px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:background .15s, color .15s;
+}
+.chip-del-btn:hover { background:var(--berry-pale); color:var(--berry); }
+
+.tag-chip{
+  display:inline-flex;align-items:center;gap:6px;background:var(--paper);border:1.5px solid var(--border);
+  border-radius:999px;padding:7px 12px;font-size:13.5px;cursor:pointer;color:var(--ink-soft);
+}
+.tag-chip[aria-pressed="true"]{background:var(--moss);border-color:var(--moss);color:#fff;font-weight:600;}
+.tag-wrap{display:flex;flex-wrap:wrap;gap:8px;}
+
+.recent-chip{
+  background:var(--paper-raised);border:1px solid var(--border);border-radius:999px;
+  padding:9px 14px;font-size:13.5px;white-space:nowrap;cursor:pointer;color:var(--ink);
+}
+.recent-chip:hover{border-color:var(--moss);}
+.recent-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+
+/* ============ BREADCRUMB ============ */
+.breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-faint);margin-bottom:14px;min-height:28px;}
+.breadcrumb strong{color:var(--moss-deep);font-weight:600;}
+
+/* ============ SLIDER ============ */
+.slider-block{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;}
+.slider-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+.slider-head label{font-weight:600;font-size:14.5px;}
+#slider-value-display{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--moss-deep);}
+input[type=range]{width:100%;margin:8px 0;accent-color:var(--moss);height:28px;cursor:pointer;}
+.slider-labels{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-faint);}
+
+textarea, input[type=text], input[type=datetime-local], input[type=number], select{
+  width:100%;padding:12px;border:1.5px solid var(--border-strong);border-radius:var(--radius-sm);
+  font-family:inherit;font-size:14.5px;background:var(--paper-raised);color:var(--ink);
+}
+input[type=date] {
+  width:100%;padding:12px;border:1.5px solid var(--border-strong);border-radius:var(--radius-sm);
+  font-family:inherit;font-size:14.5px;background:var(--paper-raised);color:var(--ink);
+}
+textarea{height:90px;resize:vertical;}
+label.field-label{display:block;font-weight:600;font-size:13.5px;margin-bottom:6px;}
+.field{margin-bottom:14px;}
+
+/* ============ TOAST ============ */
+#toast{
+  position:fixed;bottom:calc(var(--nav-h) + 18px);left:50%;transform:translateX(-50%) translateY(10px);
+  background:var(--moss-deep);color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;font-weight:600;
+  box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;z-index:50;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ============ HISTORY ============ */
+.filter-row{display:flex;gap:8px;margin-bottom:14px;}
+.filter-row select{flex:1;}
+.log-entry{background:var(--paper-raised);border:1px solid var(--border);border-left:4px solid var(--moss);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:13px 14px;margin-bottom:10px;}
+.log-entry.baseline{border-left-color:var(--sage-mild);}
+.log-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px;}
+.log-date{font-size:12px;color:var(--ink-faint);}
+.log-path{font-weight:600;font-size:14.5px;margin-bottom:4px;}
+.badge{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;}
+.badge.mild{background:var(--sage-mild-pale);color:var(--sage-mild);}
+.badge.mod{background:var(--amber-pale);color:var(--amber);}
+.badge.high{background:var(--clay-pale);color:var(--clay);}
+.badge.sev{background:var(--berry-pale);color:var(--berry);}
+.log-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.log-tags span{font-size:11.5px;background:var(--moss-pale);color:var(--moss-deep);padding:3px 8px;border-radius:999px;}
+.log-notes{margin-top:8px;font-style:italic;color:var(--ink-soft);background:var(--paper);padding:9px 10px;border-radius:8px;font-size:13.5px;}
+.log-actions{display:flex;gap:8px;margin-top:10px;}
+.icon-btn{background:transparent;border:1px solid var(--border-strong);color:var(--ink-soft);border-radius:8px;padding:6px 10px;font-size:12.5px;cursor:pointer;}
+.icon-btn:hover{background:var(--moss-pale);}
+.icon-btn.danger-txt{color:var(--berry);}
+.empty-state{text-align:center;padding:34px 16px;color:var(--ink-faint);}
+.empty-state .glyph{font-size:30px;margin-bottom:8px;}
+
+/* ============ BOTTOM NAV ============ */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
+  background:var(--paper-raised);border-top:1px solid var(--border);
+  display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:40;
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  background:transparent;border:none;color:var(--ink-faint);font-size:11px;font-weight:600;cursor:pointer;
+}
+.nav-btn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;}
+.nav-btn[aria-current="page"]{color:var(--moss);}
+.nav-btn[aria-current="page"] svg{stroke:var(--moss);fill:var(--moss-pale);}
+
+/* ============ CHARTS ============ */
+.chart-box{overflow-x:auto;}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--ink-soft);margin-top:10px;}
+.legend span{display:inline-flex;align-items:center;gap:5px;}
+.legend i{width:9px;height:9px;border-radius:2px;display:inline-block;}
+
+/* ============ SETTINGS ============ */
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+.setting-row:last-child{border-bottom:none;}
+.setting-row .label{font-weight:600;font-size:14.5px;}
+.setting-row .desc{font-size:12.5px;color:var(--ink-faint);margin-top:2px;}
+.switch{position:relative;width:46px;height:26px;flex-shrink:0;}
+.switch input{opacity:0;width:100%;height:100%;position:absolute;margin:0;cursor:pointer;}
+.switch .track{position:absolute;inset:0;background:var(--border-strong);border-radius:999px;transition:background .15s;}
+.switch .thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,0.3);}
+.switch input:checked + .track{background:var(--moss);}
+.switch input:checked + .track + .thumb{transform:translateX(20px);}
+.switch input:focus-visible + .track{outline:3px solid var(--moss);outline-offset:2px;}
+
+/* ============ FIELDNOTES V2 POLISH ============ */
+.hero-card{background:linear-gradient(135deg,var(--moss-deep),var(--moss));color:#fff;border:none;box-shadow:0 8px 24px rgba(44,78,60,.18);}
+.hero-card h2,.hero-card .subtle{color:rgba(255,255,255,.82);}
+.hero-card .hero-title{font-family:var(--font-display);font-size:25px;line-height:1.15;margin:2px 0 6px;color:#fff;}
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;}
+.hero-stat{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:10px 8px;}
+.hero-stat strong{display:block;font-size:20px;line-height:1.1;color:#fff;}
+.hero-stat span{display:block;font-size:11px;margin-top:3px;color:rgba(255,255,255,.72);}
+.insight-callout{border-radius:12px;padding:13px;background:var(--moss-pale);border:1px solid var(--border);margin-bottom:10px;}
+.insight-callout strong{display:block;font-size:14px;margin-bottom:3px;}
+.insight-callout p{font-size:13px;color:var(--ink-soft);}
+.insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.mini-stat{background:var(--paper);border:1px solid var(--border);border-radius:10px;padding:11px;}
+.mini-stat strong{display:block;font-size:19px;font-family:var(--font-display);}
+.mini-stat span{font-size:11.5px;color:var(--ink-faint);}
+.period-btn{margin-top:10px;background:var(--berry-pale)!important;color:var(--berry)!important;}
+.prediction-note{font-size:11.5px;color:var(--ink-faint);margin-top:8px;}
+.backup-status{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:var(--paper);border-radius:9px;border:1px solid var(--border);margin-bottom:10px;}
+.backup-status strong{font-size:12px;}
+.backup-status span{font-size:11px;color:var(--ink-faint);}
+
+
+/* ============ FIELDNOTES PROFESSIONAL UI — PHASE 3 ============ */
+:root{
+  --paper:#F7F8F5;--paper-raised:#FFFFFF;--ink:#18221B;--ink-soft:#536057;--ink-faint:#879189;
+  --moss:#2F684C;--moss-deep:#204A36;--moss-pale:#E8F0EA;--moss-pale-2:#D9E5DC;
+  --border:#E1E7E1;--border-strong:#CBD6CC;--radius:18px;--radius-sm:12px;
+  --shadow:0 1px 2px rgba(24,34,27,.04),0 8px 28px rgba(24,34,27,.055);
+}
+body{background:var(--paper);color:var(--ink);}
+.wrap{max-width:560px;padding:22px 18px 18px;}
+.top-header{margin-bottom:22px;align-items:center;}
+.brand{align-items:center;gap:10px;}
+.brand h1{font-family:var(--font-display);font-size:27px;letter-spacing:-.035em;color:var(--ink);}
+.brand .today{display:block;font-size:12px;margin-top:1px;color:var(--ink-faint);}
+.streak-ring{width:48px;height:48px;}
+.streak-ring svg{width:48px;height:48px;}
+.streak-ring .count{font-size:14px;color:var(--moss-deep);}
+.card{border:1px solid var(--border);border-radius:18px;padding:19px;margin-bottom:14px;box-shadow:var(--shadow);}
+.card h2{font-size:11px;letter-spacing:.1em;color:var(--ink-faint);margin-bottom:13px;}
+.hero-card{position:relative;overflow:hidden;background:linear-gradient(145deg,#234D39 0%,#2F684C 62%,#3D7759 100%);padding:22px;border-radius:22px;box-shadow:0 14px 34px rgba(32,74,54,.16);}
+.hero-card:after{content:'';position:absolute;width:180px;height:180px;border-radius:50%;right:-80px;top:-90px;background:rgba(255,255,255,.06);}
+.hero-card .hero-title{font-size:29px;letter-spacing:-.035em;margin:4px 0 8px;max-width:390px;}
+.hero-card .subtle{font-size:13px;color:rgba(255,255,255,.72);max-width:390px;}
+.hero-stats{grid-template-columns:repeat(2,1fr);gap:9px;margin-top:20px;}
+.hero-stat{background:rgba(255,255,255,.095);border:1px solid rgba(255,255,255,.13);border-radius:13px;padding:12px 10px;}
+.hero-stat strong{font-family:var(--font-display);font-size:21px;}
+.hero-stat span{font-size:10.5px;color:rgba(255,255,255,.66);}
+.btn{min-height:48px;border-radius:12px;font-size:14px;letter-spacing:-.01em;box-shadow:none;}
+.btn.secondary{background:#EEF4EF;color:var(--moss-deep);}
+.btn.ghost{background:#fff;border-color:var(--border-strong);}
+.btn.small{min-height:40px;border-radius:10px;padding:9px 12px;}
+.chip-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.chip-btn{min-height:64px;border-radius:13px;padding:12px 13px;background:#fff;border-color:var(--border);font-size:14px;line-height:1.25;}
+.chip-btn:hover{background:var(--moss-pale);border-color:#AFC7B5;}
+.recent-scroll{padding:2px 1px 6px;}
+.recent-chip{background:#F7F9F7;border-color:var(--border);padding:9px 13px;font-size:12.5px;}
+.period-btn{margin-top:9px!important;background:#FAEFF2!important;border:1px solid #EED6DE!important;color:#863C55!important;}
+.prediction-box{background:#F3F7F3;border:1px solid #DDE8DE;padding:14px;border-radius:13px;}
+.prediction-row{padding:7px 0;margin:0;border-bottom:1px solid #DFE8E0;}
+.prediction-row:last-child{border-bottom:0;}
+.prediction-label{font-weight:500;color:var(--ink-soft);}
+.prediction-value{font-weight:600;text-align:right;margin-left:12px;}
+.slider-block{background:#F7F9F7;border:1px solid var(--border);border-radius:13px;padding:16px;}
+textarea,input[type=text],input[type=datetime-local],input[type=number],select,input[type=date]{border:1px solid var(--border-strong);border-radius:11px;background:#fff;}
+textarea:focus,input:focus,select:focus{border-color:var(--moss);box-shadow:0 0 0 3px rgba(47,104,76,.09);outline:none;}
+.bottom-nav{height:70px;background:rgba(255,255,255,.96);backdrop-filter:blur(18px);border-top:1px solid var(--border);box-shadow:0 -8px 25px rgba(24,34,27,.045);padding-bottom:env(safe-area-inset-bottom);}
+.nav-btn{font-size:10.5px;color:#8A948D;gap:4px;}
+.nav-btn svg{width:20px;height:20px;}
+.nav-btn[data-nav=log]{position:relative;color:#fff;margin:-12px 7px 0;background:var(--moss);border-radius:16px;box-shadow:0 7px 18px rgba(47,104,76,.22);height:58px;align-self:flex-start;}
+.nav-btn[data-nav=log] svg{stroke:#fff;fill:none;}
+.nav-btn[data-nav=log][aria-current=page]{color:#fff;}
+.nav-btn[data-nav=log][aria-current=page] svg{stroke:#fff;fill:none;}
+.nav-btn[aria-current=page]:not([data-nav=log]){color:var(--moss);}
+.nav-btn[aria-current=page]:not([data-nav=log]) svg{stroke:var(--moss);fill:var(--moss-pale);}
+.log-entry{border:1px solid var(--border);border-left:0;border-radius:14px;padding:15px;margin-bottom:9px;box-shadow:0 2px 10px rgba(24,34,27,.035);}
+.log-entry.baseline{border-left:0;background:#F6FAF7;}
+.log-path{font-size:14px;}
+.chart-box{padding-top:2px;}
+.insight-callout{background:#F5F8F5;border:1px solid #E0E8E1;border-radius:14px;padding:15px;margin-bottom:9px;}
+.insight-callout strong{font-size:14px;letter-spacing:-.01em;}
+.insight-callout p{font-size:12.5px;line-height:1.55;margin-top:3px;}
+.insight-grid{gap:9px;}
+.mini-stat{background:#F8FAF8;border:1px solid var(--border);border-radius:13px;padding:13px;}
+.mini-stat strong{font-size:20px;}
+.setting-row{padding:14px 0;}
+.empty-state{background:#fff;border:1px dashed var(--border-strong);border-radius:15px;}
+@media(max-width:420px){.wrap{padding-left:15px;padding-right:15px}.hero-card .hero-title{font-size:26px}.hero-stats{gap:7px}.hero-stat{padding:10px 7px}.hero-stat strong{font-size:19px}.chip-grid{grid-template-columns:1fr 1fr}.btn-row{flex-direction:row}.btn-row .btn{min-width:0}}
+@media(max-width:350px){.btn-row{flex-direction:column}.btn-row .btn{width:100%}}
+
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app-root">
+
+  <div class="top-header">
+    <div class="brand">
+      <div>
+        <h1>Fieldnotes</h1>
+        <div class="today" id="today-date"></div>
+      </div>
+    </div>
+    <div class="streak-ring" role="img" id="streak-ring-wrap" aria-label="">
+      <svg viewBox="0 0 52 52">
+        <circle class="track" cx="26" cy="26" r="21"></circle>
+        <circle class="fill" id="streak-arc" cx="26" cy="26" r="21"></circle>
+      </svg>
+      <div class="count" id="streak-count">0</div>
+    </div>
+  </div>
+
+  <div id="live-region" class="visually-hidden" aria-live="polite" role="status"></div>
+
+  <!-- ============ HOME ============ -->
+  <section id="screen-home" data-screen>
+    <div class="card hero-card">
+      <div class="subtle">FIELDNOTES · YOUR PATTERNS</div>
+      <div class="hero-title" id="hero-greeting">A clearer picture starts here.</div>
+      <p class="subtle" id="hero-subtitle">Log what matters. Fieldnotes will help you spot patterns over time.</p>
+      <div class="hero-stats">
+        <div class="hero-stat"><strong id="hero-week-count">0</strong><span>entries · 7 days</span></div>
+        <div class="hero-stat"><strong id="hero-active-days">0</strong><span>active days</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Quick log</h2>
+      <div class="btn-row" style="margin-bottom:10px;">
+        <button class="btn secondary" id="home-baseline">✓ Nothing today</button>
+      </div>
+      <button class="btn secondary period-btn" id="home-period-start" style="display:none; width: 100%;">◷ Period started today</button>
+      <div id="recent-wrap" style="margin-top: 14px;">
+        <p class="subtle" style="margin-bottom:8px;">Recent</p>
+        <div class="recent-scroll" id="recent-chips"></div>
+      </div>
+    </div>
+
+    <div class="card" id="cycle-day-card" style="display:none;">
+      <h2>Cycle Insights</h2>
+      <p class="section-title" id="cycle-day-text"></p>
+      
+      <div id="cycle-predictions" class="prediction-box">
+          <!-- Filled by JS -->
+      </div>
+      
+      <p class="subtle" id="cycle-anchor-text"></p>
+    </div>
+
+    <div class="card">
+      <h2>This week</h2>
+      <p class="subtle" id="home-summary">No entries logged yet this week.</p>
+    </div>
+  </section>
+
+  <!-- ============ LOG (tree flow) ============ -->
+  <section id="screen-log" data-screen style="display:none;">
+    <div class="card">
+      <div class="btn-row" style="margin-bottom:14px;">
+        <button class="btn secondary small" id="tree-cat-physical" style="flex:1;">Physical</button>
+        <button class="btn secondary small" id="tree-cat-cycle" style="flex:1;">Cycle</button>
+      </div>
+
+      <div class="breadcrumb" id="breadcrumb" tabindex="-1"></div>
+
+      <div id="menu-container" class="chip-grid"></div>
+
+      <div id="notes-container" style="display:none;flex-direction:column;gap:16px;">
+        <div class="slider-block">
+          <div class="slider-head">
+            <label for="severity-input">Severity level</label>
+            <span id="slider-value-display">5 / 10</span>
+          </div>
+          <input type="range" id="severity-input" min="1" max="10" value="5">
+          <div class="slider-labels"><span>1 · Mild</span><span>10 · Severe</span></div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="datetime-input">When</label>
+          <input type="datetime-local" id="datetime-input">
+        </div>
+
+        <div class="field">
+          <p class="field-label">Possible triggers <span class="subtle" style="font-weight:400;">(optional)</span></p>
+          <div class="tag-wrap" id="tag-wrap"></div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="notes-input">Notes <span class="subtle" style="font-weight:400;">(optional)</span></label>
+          <textarea id="notes-input" placeholder="Started after coffee, changed when standing up…"></textarea>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn" id="save-add-btn">Save &amp; log another</button>
+          <button class="btn secondary" id="save-finish-btn">Save &amp; view history</button>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:16px; display:none;" id="tree-nav-buttons">
+        <button class="btn secondary" id="back-btn">← Back</button>
+        <button class="btn secondary" id="home-btn-reset">⟲ Start over</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HISTORY ============ -->
+  <section id="screen-history" data-screen style="display:none;">
+    <div class="card">
+      <h2>Filter</h2>
+      <div class="filter-row">
+        <select id="history-cat-filter" aria-label="Filter by category"></select>
+      </div>
+      <input type="text" id="history-search" placeholder="Search notes or symptom…" aria-label="Search history">
+    </div>
+    <div id="history-container"></div>
+    <div class="card">
+      <h2>Data</h2>
+      <div class="btn-row">
+        <button class="btn secondary small" id="export-csv-btn" style="flex:1;">Export CSV</button>
+        <button class="btn secondary small" id="export-json-btn" style="flex:1;">Export backup (JSON)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INSIGHTS ============ -->
+  <section id="screen-insights" data-screen style="display:none;">
+    <div class="card">
+      <h2>What your data is saying</h2>
+      <div id="pattern-insights"></div>
+    </div>
+    <div class="card">
+      <h2>What changed</h2>
+      <div class="chart-box" id="what-changed"></div>
+    </div>
+    <div class="card">
+      <h2>Recurring patterns</h2>
+      <div class="chart-box" id="recurring-patterns"></div>
+    </div>
+    <div class="card" id="cycle-comparison-card" style="display:none;">
+      <h2>Cycle comparison</h2>
+      <div class="chart-box" id="cycle-comparison"></div>
+    </div>
+    <div class="card">
+      <h2>Today's issues</h2>
+      <div class="chart-box" id="today-issues"></div>
+    </div>
+    <div class="card">
+      <h2>Most logged areas</h2>
+      <div class="chart-box" id="chart-frequency"></div>
+    </div>
+    <div class="card">
+      <h2>Logging consistency</h2>
+      <div class="chart-box" id="chart-heatmap"></div>
+      <p class="subtle" style="margin-top:8px;">Darker = more entries that day. Grey = no log.</p>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section id="screen-settings" data-screen style="display:none;">
+    <div class="card">
+      <h2>Reminders</h2>
+      <div class="setting-row">
+        <div>
+          <div class="label">Daily reminder</div>
+          <div class="desc">Nudge while the app is open if you haven't logged today</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="reminder-toggle">
+          <span class="track"></span><span class="thumb"></span>
+        </label>
+      </div>
+      <div class="setting-row" id="reminder-time-row">
+        <div class="label">Reminder time</div>
+        <input type="time" id="reminder-time" style="width:120px;">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Profile</h2>
+      <p class="desc" style="margin-bottom:10px;color:var(--ink-faint);font-size:12.5px;">Hides the Cycle category and cycle-day tracking when it doesn't apply to you.</p>
+      <div class="btn-row" role="group" aria-label="Profile">
+        <button class="btn secondary small" id="profile-female-btn" style="flex:1;">Female</button>
+        <button class="btn secondary small" id="profile-male-btn" style="flex:1;">Male</button>
+      </div>
+    </div>
+
+    <div class="card" id="cycle-settings-card">
+      <h2>Cycle tracking</h2>
+      <div class="setting-row">
+        <div>
+          <div class="label">Last period start</div>
+          <div class="desc" id="cycle-anchor-desc">Not set</div>
+        </div>
+      </div>
+      <div class="setting-row" style="padding-top: 0;">
+        <div class="label">Average cycle length</div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="number" id="cycle-length-input" min="20" max="45" style="width: 70px; text-align: center; padding: 8px;">
+            <span class="subtle">days</span>
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top: 10px;">
+        <input type="date" id="cycle-anchor-input" style="flex:1;">
+        <button class="btn secondary small" id="cycle-anchor-save">Save Cycle Data</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Backup &amp; restore</h2>
+      <p class="subtle" style="margin-bottom:12px;">Everything stays on this device. Export a backup regularly and save it to your cloud drive (Google Drive, iCloud, Dropbox) so you don't lose history if this device is lost or its storage is cleared.</p>
+      <div class="backup-status"><div><strong>Backup health</strong><br><span id="backup-status-text">No backup recorded yet</span></div><span id="backup-status-icon">○</span></div>
+      <div class="btn-row" style="margin-bottom:10px;">
+        <button class="btn secondary small" id="settings-export-btn" style="flex:1;">Export backup</button>
+        <button class="btn ghost small" id="settings-import-btn" style="flex:1;">Import backup</button>
+      </div>
+      <input type="file" id="import-file-input" accept="application/json" class="visually-hidden">
+      <p class="subtle" id="share-hint" style="display:none;">On phones, exporting opens the share sheet — choose your cloud drive or Files app to save it there.</p>
+    </div>
+
+    <div class="card">
+      <h2>Install as an app</h2>
+      <p class="subtle" id="install-hint">Add Fieldnotes to your home screen from your browser's share/menu button for quick, full-screen access.</p>
+      <button class="btn secondary small" id="install-btn" style="display:none;margin-top:10px;">Add to home screen</button>
+    </div>
+
+    <div class="card">
+      <h2>Danger zone</h2>
+      <button class="btn danger" id="clear-btn">Delete all history</button>
+    </div>
+  </section>
+
+</div>
+
+<div id="toast" role="status"></div>
+
+<nav class="bottom-nav" aria-label="Main">
+  <button class="nav-btn" data-nav="home" aria-current="page">
+    <svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9h12v-9"/></svg>
+    Home
+  </button>
+  <button class="nav-btn" data-nav="log">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+    Log
+  </button>
+  <button class="nav-btn" data-nav="history">
+    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+    History
+  </button>
+  <button class="nav-btn" data-nav="insights">
+    <svg viewBox="0 0 24 24"><path d="M4 19V9M11 19V4M18 19v-7"/></svg>
+    Insights
+  </button>
+  <button class="nav-btn" data-nav="settings">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2-1.2L14 3h-4l-.6 2.6a7 7 0 0 0-2 1.2l-2.3-.9-2 3.4 2 1.5A7 7 0 0 0 5 12a7 7 0 0 0 .1 1.2l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2 1.2L10 21h4l.6-2.6a7 7 0 0 0 2-1.2l2.3.9 2-3.4-2-1.5c.07-.4.1-.8.1-1.2Z"/></svg>
+    Settings
+  </button>
+</nav>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   FIELDNOTES PHASE 4 — profile-safe cycle UI + insight cleanup
+   ============================================================ */
+/* ============================================================
+   DEFAULT SYMPTOM TREE
+   ============================================================ */
+const bilat = (arr) => ({ "Left": arr, "Right": arr, "Both sides": arr });
+
+const defaultTree = {
+  "Physical": {
+    "Head & Neck": {
+      "Head / Scalp": ["Ache","Throbbing","Sharp pain","Tenderness"],
+      "Forehead & Temples": bilat(["Pressure","Throbbing","Dull ache","Sharp pain"]),
+      "Eyes": bilat(["Dry/Itchy","Ache behind eyes","Stabbing pain","Pressure"]),
+      "Ears": bilat(["Ache","Ringing","Pressure","Sharp pain"]),
+      "Nose & Sinuses": ["Congestion","Dryness","Pain","Pressure"],
+      "Mouth & Jaw": bilat(["Toothache","Jaw Clenching","Soreness","Clicking/Popping"]),
+      "Neck & Throat": ["Stiffness","Sore throat","Swollen Glands","Ache"]
+    },
+    "Arms & Hands": {
+      "Shoulders": bilat(["Stiffness","Ache","Sharp pain","Tension"]),
+      "Upper Arms": bilat(["Ache","Weakness","Soreness"]),
+      "Elbows": bilat(["Ache","Sharp pain","Stiffness"]),
+      "Forearms & Wrists": bilat(["Ache","Sharp pain","Stiffness","Weakness","Tingling"]),
+      "Hands & Fingers": bilat(["Stiffness","Ache","Coldness","Tingling","Swelling"])
+    },
+    "Chest & Torso": {
+      "Chest & Ribs": bilat(["Tightness","Ache","Sharp pain","Pressure"]),
+      "Breasts": bilat(["Tenderness","Swelling","Sharp pain","Ache"]),
+      "Abdomen & Stomach": ["Cramping","Bloating","Sharp pain","Nausea","Indigestion"],
+      "Internal Organs (Heart/Lungs)": ["Palpitations","Shortness of breath","Pain when breathing"]
+    },
+    "Back & Spine": {
+      "Upper & Mid Back": ["Ache","Spasm","Stiffness","Sharp pain"],
+      "Lower Back": ["Dull ache","Severe cramping","Stiffness","Shooting pain"],
+      "Spine": ["Tenderness","Sharp pain","Ache"],
+      "Kidneys / Flanks": bilat(["Dull ache","Sharp pain","Tenderness"])
+    },
+    "Pelvis & Groin": {
+      "Hips": bilat(["Ache","Stiffness","Sharp pain","Clicking"]),
+      "Pelvis (General)": ["Pressure","Ache","Sharp pain","Cramping"],
+      "Groin / Genitals": ["Soreness","Itchiness","Dryness","Burning","Sharp pain"],
+      "Buttocks": bilat(["Ache","Shooting pain","Spasm"]),
+      "Internal Reproductive": ["Menstrual cramping","Ovulation pain","Deep pressure","Sharp twinge"]
+    },
+    "Legs & Feet": {
+      "Thighs": bilat(["Ache","Cramping","Weakness","Soreness"]),
+      "Knees": bilat(["Ache","Sharp pain","Swelling","Stiffness"]),
+      "Shins & Calves": bilat(["Cramping","Ache","Tightness","Splints"]),
+      "Ankles": bilat(["Ache","Swelling","Stiffness","Sharp pain"]),
+      "Feet & Toes": bilat(["Ache","Sharp pain","Swelling","Coldness","Tingling"])
+    }
+  },
+  "Cycle": {
+    "Flow Level": ["Spotting","Light","Medium","Heavy","Passing Clots"],
+    "Mood & Emotional": ["Irritability / Frustration","Anxiety / Restlessness","Sadness / Tearfulness","Mood Swings","Apathy / Low Motivation","Brain Fog / Difficulty Concentrating"],
+    "Systemic & Other": ["Fatigue / Exhaustion","Sleep Disturbances (Insomnia/Oversleeping)","Food Cravings / Appetite Changes","Gastrointestinal Issues (Diarrhea/Constipation)","Severe Bloating / Water Retention","Hot Flashes / Temperature Fluctuations","Libido Changes"]
+  }
+};
+
+const TRIGGER_TAGS = ["Sleep","Stress","Illness","Food","Exercise","Weather","Hormonal","Medication","Alcohol/Caffeine","Injury","Other"];
+
+/* ============================================================
+   STATE  (versioned localStorage keys)
+   ============================================================ */
+function loadJSON(key, fallback){
+  try{
+    const v = localStorage.getItem(key);
+    return v ? JSON.parse(v) : fallback;
+  }catch(e){ return fallback; }
+}
+function saveJSON(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); return true; }
+  catch(e){ console.error("Storage failed", e); return false; }
+}
+
+let dynamicTree = loadJSON('symptomCustomTree_v4', defaultTree);
+let logs = loadJSON('symptomLogs_v2', []); 
+let settings = loadJSON('trackerSettings_v1', {
+  reminderEnabled:false, reminderTime:"20:00", cycleAnchor:null, profile:"female", cycleLength: 28, categoryNames: {}
+});
+
+if (!settings.cycleLength) settings.cycleLength = 28;
+if (!settings.categoryNames) settings.categoryNames = {};
+
+let activeScreen = 'home';
+let treeCategory = 'Physical';
+let currentPath = [];
+let historyStack = [];
+let currentNode = null;
+let selectedTags = [];
+let editingId = null; 
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function todayISODate(d){ 
+  d = d || new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function toDatetimeLocalValue(d){
+  const pad = n => String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+function formatDisplayDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}) + ' · ' +
+         d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+}
+function severityClass(score){
+  if(score>=9) return 'sev';
+  if(score>=7) return 'high';
+  if(score>=4) return 'mod';
+  return 'mild';
+}
+function severityLabel(score){
+  if(score>=9) return 'Severe';
+  if(score>=7) return 'High';
+  if(score>=4) return 'Moderate';
+  return 'Mild';
+}
+function announce(msg){
+  const el = document.getElementById('live-region');
+  el.textContent = '';
+  setTimeout(()=>{ el.textContent = msg; }, 30);
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=> t.classList.remove('show'), 2200);
+  announce(msg);
+}
+function cycleDayFor(dateObj){
+  if(!settings.cycleAnchor) return null;
+  const anchor = new Date(settings.cycleAnchor+'T00:00:00');
+  const d = new Date(todayISODate(dateObj)+'T00:00:00');
+  const diff = Math.round((d - anchor)/86400000);
+  return diff >= 0 ? diff + 1 : null;
+}
+function csvEscape(v){
+  if(v===null||v===undefined) return '';
+  const s = String(v);
+  return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+}
+
+function getCategoryName(k) {
+  if (!settings.categoryNames) return k;
+  return settings.categoryNames[k] || k;
+}
+
+/* ============================================================
+   CYCLE PREDICTIONS CALCULATOR
+   ============================================================ */
+function getCyclePredictions(anchorDateStr, cycleLength) {
+    if (!anchorDateStr) return null;
+    const LUTEAL_PHASE = 14; 
+    const anchor = new Date(anchorDateStr + 'T00:00:00');
+    const today = new Date(todayISODate(new Date()) + 'T00:00:00');
+    
+    const diffTime = Math.abs(today - anchor);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    let currentAnchor = new Date(anchor);
+    if (diffDays >= cycleLength) {
+        const cyclesPassed = Math.floor(diffDays / cycleLength);
+        currentAnchor = new Date(anchor.getTime() + (cyclesPassed * cycleLength * 86400000));
+    }
+
+    const nextPeriod = new Date(currentAnchor.getTime() + (cycleLength * 86400000));
+    const ovulation = new Date(nextPeriod.getTime() - (LUTEAL_PHASE * 86400000));
+    const fertileStart = new Date(ovulation.getTime() - (5 * 86400000));
+    const fertileEnd = new Date(ovulation.getTime() + (1 * 86400000));
+
+    return { nextPeriod, ovulation, fertileStart, fertileEnd, currentAnchor };
+}
+
+function formatDateShort(dateObj) {
+    return dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+const screens = ['home','log','history','insights','settings'];
+function goTo(screen, opts){
+  opts = opts || {};
+  activeScreen = screen;
+  screens.forEach(s=>{
+    document.getElementById('screen-'+s).style.display = (s===screen) ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    const isActive = b.dataset.nav === screen;
+    if(isActive) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
+  });
+  if(screen==='home') renderHome();
+  if(screen==='log' && !opts.preserveTree) resetTree(treeCategory);
+  if(screen==='history') renderHistory();
+  if(screen==='insights') renderInsights();
+  if(screen==='settings') renderSettings();
+  const target = document.getElementById('screen-'+screen);
+  const heading = target.querySelector('h1,h2,.section-title,[tabindex="-1"]');
+  if(heading){ heading.setAttribute('tabindex','-1'); heading.focus({preventScroll:true}); }
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> goTo(btn.dataset.nav));
+});
+
+/* ============================================================
+   HOME SCREEN
+   ============================================================ */
+function computeStreak(){
+  const days = new Set(logs.map(l=> todayISODate(new Date(l.dateISO))));
+  let streak = 0;
+  let cursor = new Date();
+  while(true){
+    const key = todayISODate(cursor);
+    if(days.has(key)){ streak++; cursor.setDate(cursor.getDate()-1); }
+    else break;
+  }
+  return streak;
+}
+function renderStreakRing(){
+  const streak = computeStreak();
+  const capped = Math.min(streak, 14);
+  const r = 21, circ = 2*Math.PI*r;
+  const pct = capped/14;
+  const arc = document.getElementById('streak-arc');
+  arc.setAttribute('stroke-dasharray', circ);
+  arc.setAttribute('stroke-dashoffset', circ*(1-pct));
+  document.getElementById('streak-count').textContent = streak;
+  document.getElementById('streak-ring-wrap').setAttribute('aria-label', streak+' day logging streak');
+}
+function renderHero(){
+  const weekAgo=Date.now()-7*86400000;
+  const recent=logs.filter(l=>new Date(l.dateISO).getTime()>=weekAgo);
+  const activeDays=new Set(recent.map(l=>todayISODate(new Date(l.dateISO))));
+  document.getElementById('hero-week-count').textContent=recent.length;
+  document.getElementById('hero-active-days').textContent=activeDays.size;
+  const greeting=document.getElementById('hero-greeting');
+  const hour=new Date().getHours();
+  greeting.textContent=recent.length ? (hour<12?'Good morning.':hour<18?'Good afternoon.':'Good evening.') : 'A clearer picture starts here.';
+}
+
+function topPaths(n){
+  const counts = {};
+  logs.forEach(l=>{
+    if(l.baseline) return;
+    const key = l.path.join(' > ');
+    counts[key] = (counts[key]||0) + 1;
+  });
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,n).map(e=>e[0]);
+}
+function jumpToPathAndLog(pathStr){
+  const parts = pathStr.split(' > ');
+  treeCategory = parts[0];
+  currentPath = parts.slice();
+  currentNode = 'END';
+  historyStack = [];
+  editingId = null;
+  goTo('log', {preserveTree:true});
+  renderMenu();
+}
+function renderHome(){
+  renderHero();
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'});
+  renderStreakRing();
+
+  const recentWrap = document.getElementById('recent-chips');
+  const paths = topPaths(6);
+  recentWrap.innerHTML = '';
+  if(paths.length===0){
+    recentWrap.innerHTML = '<span class="subtle">Nothing logged yet — your frequent entries will show up here.</span>';
+  }else{
+    paths.forEach(p=>{
+      const b = document.createElement('button');
+      b.className = 'recent-chip';
+      b.textContent = p.split(' > ').slice(-2).join(' · ');
+      b.title = p;
+      b.onclick = ()=> jumpToPathAndLog(p);
+      recentWrap.appendChild(b);
+    });
+  }
+
+  const cycleCard = document.getElementById('cycle-day-card');
+  const periodBtn = document.getElementById('home-period-start');
+  if(periodBtn) periodBtn.style.display = settings.profile==='male' ? 'none' : 'block';
+  const predictionBox = document.getElementById('cycle-predictions');
+  
+  if(settings.profile==='male'){
+    cycleCard.style.display = 'none';
+  }else if(settings.cycleAnchor){
+    cycleCard.style.display = 'block';
+    const day = cycleDayFor(new Date());
+    document.getElementById('cycle-day-text').textContent = day ? ('Day '+day) : '—';
+    document.getElementById('cycle-anchor-text').textContent = 'Since '+ new Date(settings.cycleAnchor+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'});
+    
+    if (settings.cycleLength && predictionBox) {
+        const predictions = getCyclePredictions(settings.cycleAnchor, parseInt(settings.cycleLength));
+        const today = new Date(todayISODate(new Date()) + 'T00:00:00');
+        
+        let phaseText = "Follicular Phase";
+        if (today >= predictions.fertileStart && today <= predictions.fertileEnd) phaseText = "Fertile Window";
+        else if (today > predictions.fertileEnd) phaseText = "Luteal Phase";
+        if (day <= 5) phaseText = "Menstrual Phase"; 
+
+        const daysToNext = Math.ceil((predictions.nextPeriod - today) / (1000 * 60 * 60 * 24));
+        const daysToNextText = daysToNext === 0 ? "Today" : (daysToNext === 1 ? "Tomorrow" : `In ${daysToNext} days`);
+
+        predictionBox.innerHTML = `
+            <div class="prediction-row">
+                <span class="prediction-label">Current Phase</span>
+                <span class="prediction-value">${phaseText}</span>
+            </div>
+            <div class="prediction-row">
+                <span class="prediction-label">Estimated fertile window</span>
+                <span class="prediction-value">${formatDateShort(predictions.fertileStart)} - ${formatDateShort(predictions.fertileEnd)}</span>
+            </div>
+            <div class="prediction-row">
+                <span class="prediction-label">Estimated ovulation</span>
+                <span class="prediction-value">${formatDateShort(predictions.ovulation)}</span>
+            </div>
+            <div class="prediction-row" style="margin-top: 8px; border-top: 1px solid var(--border-strong); padding-top: 8px;">
+                <span class="prediction-label">Predicted next period</span>
+                <span class="prediction-value">${formatDateShort(predictions.nextPeriod)} (${daysToNextText})</span>
+            </div>
+        `;
+    }
+  }else{
+    cycleCard.style.display = 'none';
+  }
+
+  const weekAgo = Date.now() - 7*86400000;
+  const weekLogs = logs.filter(l=> new Date(l.dateISO).getTime() >= weekAgo);
+  const summaryEl = document.getElementById('home-summary');
+  if(weekLogs.length===0){
+    summaryEl.textContent = 'No entries logged yet this week.';
+  }else{
+    const symptomCount = weekLogs.filter(l=>!l.baseline).length;
+    const baselineCount = weekLogs.filter(l=>l.baseline).length;
+    summaryEl.textContent = symptomCount + ' symptom ' + (symptomCount===1?'entry':'entries') +
+      (baselineCount? (', '+baselineCount+' symptom-free day'+(baselineCount===1?'':'s')) : '') + '.';
+  }
+}
+document.getElementById('home-baseline').onclick = ()=>{
+  logs.unshift({
+    id: Date.now(), dateISO: new Date().toISOString(),
+    path: [treeCategory,'No symptoms'], baseline:true,
+    severity:null, notes:'', tags:[]
+  });
+  saveJSON('symptomLogs_v2', logs);
+  toast('Logged a symptom-free day ✓');
+  renderHome();
+};
+
+function recordPeriodStart(){
+  const today=todayISODate(new Date());
+  settings.cycleAnchor=today;
+  if(!settings.cycleLength) settings.cycleLength=28;
+  saveJSON('trackerSettings_v1',settings);
+  logs.unshift({id:Date.now(),dateISO:new Date().toISOString(),path:['Cycle','Period','Period started'],baseline:false,periodStart:true,severity:null,notes:'Period started',tags:['Cycle']});
+  saveJSON('symptomLogs_v2',logs);
+  toast('Period start recorded ✓');
+  renderHome();
+}
+document.getElementById('home-period-start').onclick=()=>{ if(confirm('Record today as the first day of your period?')) recordPeriodStart(); };
+
+/* ============================================================
+   LOG / TREE FLOW
+   ============================================================ */
+document.getElementById('tree-cat-physical').onclick = ()=>{ treeCategory='Physical'; resetTree('Physical'); };
+document.getElementById('tree-cat-cycle').onclick = ()=>{ if(settings.profile==='male') return; treeCategory='Cycle'; resetTree('Cycle'); };
+
+function resetTree(cat){
+  if(settings.profile==='male' && cat==='Cycle') cat='Physical';
+  treeCategory = cat;
+  currentPath = [cat];
+  historyStack = [];
+  currentNode = dynamicTree[cat];
+  editingId = null;
+  selectedTags = [];
+  updateCatButtons();
+  renderMenu();
+}
+function updateCatButtons(){
+  const physBtn = document.getElementById('tree-cat-physical');
+  const cycBtn = document.getElementById('tree-cat-cycle');
+  
+  physBtn.textContent = getCategoryName('Physical');
+  cycBtn.textContent = getCategoryName('Cycle');
+  
+  physBtn.style.outline = treeCategory==='Physical' ? '2px solid var(--moss)' : 'none';
+  cycBtn.style.outline = treeCategory==='Cycle' ? '2px solid var(--moss)' : 'none';
+  
+  const femaleProfile=settings.profile!=='male';
+  cycBtn.style.display = femaleProfile ? 'flex' : 'none';
+  const periodBtn=document.getElementById('home-period-start');
+  if(periodBtn) periodBtn.style.display=femaleProfile ? 'block' : 'none';
+}
+
+function isOptionUsed(choice) {
+  const pathToCheck = [...currentPath, choice];
+  return logs.some(l => {
+    if (!l.path) return false;
+    for (let i = 0; i < pathToCheck.length; i++) {
+      if (l.path[i] !== pathToCheck[i]) return false;
+    }
+    return true;
+  });
+}
+
+function renderMenu(){
+  if(settings.profile==='male' && treeCategory==='Cycle'){ resetTree('Physical'); return; }
+  
+  const breadcrumb = document.getElementById('breadcrumb');
+  breadcrumb.innerHTML = '';
+  
+  const pathSpan = document.createElement('span');
+  pathSpan.innerHTML = currentPath.map((p,i)=> {
+    const displayStr = (i === 0) ? getCategoryName(p) : p;
+    return i===currentPath.length-1 ? '<strong>'+escapeHTML(displayStr)+'</strong>' : escapeHTML(displayStr);
+  }).join(' <span aria-hidden="true">›</span> ');
+  breadcrumb.appendChild(pathSpan);
+  
+  // Top Level Category Renaming Option
+  if(currentPath.length === 1) {
+    const editBtn = document.createElement('button');
+    editBtn.className = 'icon-btn';
+    editBtn.style.padding = '4px 10px';
+    editBtn.style.marginLeft = 'auto';
+    editBtn.innerHTML = '✎ Rename';
+    editBtn.onclick = () => {
+      const currentName = getCategoryName(treeCategory);
+      const newName = prompt('Rename category (' + currentName + '):', currentName);
+      if(newName && newName.trim()) {
+        if(!settings.categoryNames) settings.categoryNames = {};
+        settings.categoryNames[treeCategory] = newName.trim();
+        saveJSON('trackerSettings_v1', settings);
+        updateCatButtons();
+        renderMenu();
+        if(activeScreen === 'history') renderHistory();
+        toast('Category renamed');
+      }
+    };
+    breadcrumb.appendChild(editBtn);
+  }
+
+  document.getElementById('tree-nav-buttons').style.display = currentPath.length>1 ? 'flex':'none';
+
+  const menuContainer = document.getElementById('menu-container');
+  const notesContainer = document.getElementById('notes-container');
+  menuContainer.innerHTML = '';
+
+  if(currentNode === 'END'){
+    menuContainer.style.display = 'none';
+    notesContainer.style.display = 'flex';
+    if(editingId===null){
+      document.getElementById('notes-input').value = '';
+      document.getElementById('severity-input').value = 5;
+      document.getElementById('slider-value-display').textContent = '5 / 10';
+      document.getElementById('datetime-input').value = toDatetimeLocalValue(new Date());
+      selectedTags = [];
+    }
+    renderTagChips();
+    return;
+  }
+
+  menuContainer.style.display = 'grid';
+  notesContainer.style.display = 'none';
+
+  const entries = Array.isArray(currentNode) ? currentNode.map(v=>[v,true]) : Object.keys(currentNode).map(k=>[k,false]);
+  entries.forEach(([choice,isFinal])=>{
+    const isUsed = isOptionUsed(choice);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'chip-wrap';
+
+    const btn = document.createElement('button');
+    btn.className = 'chip-btn';
+    btn.textContent = choice;
+    if(!isUsed) btn.style.paddingRight = '36px';
+    btn.onclick = ()=> selectOption(choice, isFinal);
+    wrap.appendChild(btn);
+
+    if(!isUsed){
+      const delBtn = document.createElement('button');
+      delBtn.className = 'chip-del-btn';
+      delBtn.innerHTML = '&times;';
+      delBtn.setAttribute('aria-label', 'Delete ' + choice);
+      delBtn.onclick = (e)=>{
+        e.stopPropagation();
+        if(!confirm('Delete "' + choice + '"?')) return;
+        if(Array.isArray(currentNode)){
+          const idx = currentNode.indexOf(choice);
+          if(idx > -1) currentNode.splice(idx, 1);
+        }else{
+          delete currentNode[choice];
+        }
+        saveJSON('symptomCustomTree_v4', dynamicTree);
+        renderMenu();
+      };
+      wrap.appendChild(delBtn);
+    }
+
+    menuContainer.appendChild(wrap);
+  });
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'chip-btn add-new';
+  addBtn.textContent = '+ Add new option';
+  addBtn.onclick = promptAddNew;
+  menuContainer.appendChild(addBtn);
+}
+
+function selectOption(choice, isFinal){
+  currentPath.push(choice);
+  historyStack.push(currentNode);
+  currentNode = isFinal ? 'END' : currentNode[choice];
+  renderMenu();
+}
+function promptAddNew(){
+  const name = prompt('Name your new option:');
+  if(!name || !name.trim()) return;
+  const clean = name.trim();
+  if(Array.isArray(currentNode)){
+    if(!currentNode.includes(clean)) currentNode.push(clean);
+  }else{
+    if(!currentNode[clean]) currentNode[clean] = ['Log this'];
+  }
+  saveJSON('symptomCustomTree_v4', dynamicTree);
+  renderMenu();
+}
+document.getElementById('back-btn').onclick = ()=>{
+  if(currentPath.length>1){
+    currentPath.pop();
+    currentNode = historyStack.pop();
+    editingId = null;
+    renderMenu();
+  }
+};
+document.getElementById('home-btn-reset').onclick = ()=> resetTree(treeCategory);
+
+document.getElementById('severity-input').addEventListener('input', function(){
+  document.getElementById('slider-value-display').textContent = this.value + ' / 10';
+});
+
+function renderTagChips(){
+  const wrap = document.getElementById('tag-wrap');
+  wrap.innerHTML = '';
+  TRIGGER_TAGS.forEach(tag=>{
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tag-chip';
+    b.textContent = tag;
+    const pressed = selectedTags.includes(tag);
+    b.setAttribute('aria-pressed', pressed ? 'true':'false');
+    b.onclick = ()=>{
+      if(selectedTags.includes(tag)) selectedTags = selectedTags.filter(t=>t!==tag);
+      else selectedTags.push(tag);
+      renderTagChips();
+    };
+    wrap.appendChild(b);
+  });
+}
+
+function buildEntryFromForm(){
+  const dtVal = document.getElementById('datetime-input').value;
+  const dateISO = dtVal ? new Date(dtVal).toISOString() : new Date().toISOString();
+  return {
+    id: editingId !== null ? editingId : Date.now(),
+    dateISO: dateISO,
+    path: currentPath.slice(),
+    baseline:false,
+    severity: document.getElementById('severity-input').value,
+    notes: document.getElementById('notes-input').value.trim(),
+    tags: selectedTags.slice()
+  };
+}
+function saveEntry(){
+  const entry = buildEntryFromForm();
+  if(editingId !== null){
+    const idx = logs.findIndex(l=>l.id===editingId);
+    if(idx>-1) logs[idx] = entry;
+  }else{
+    logs.unshift(entry);
+  }
+  saveJSON('symptomLogs_v2', logs);
+  return entry;
+}
+document.getElementById('save-add-btn').onclick = ()=>{
+  saveEntry();
+  toast('Entry saved ✓');
+  editingId = null;
+  resetTree(treeCategory);
+};
+document.getElementById('save-finish-btn').onclick = ()=>{
+  saveEntry();
+  editingId = null;
+  toast('Entry saved ✓');
+  goTo('history');
+};
+
+/* ============================================================
+   HISTORY
+   ============================================================ */
+function populateHistoryFilter(){
+  const sel = document.getElementById('history-cat-filter');
+  const current = sel.value || 'All';
+  const cats = new Set(['All']);
+  Object.keys(defaultTree).forEach(c=>{ if(c!=='Cycle' || settings.profile!=='male') cats.add(c); });
+  logs.forEach(l=> cats.add(l.path[0]));
+  sel.innerHTML = '';
+  cats.forEach(c=>{
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c==='All' ? 'All categories' : getCategoryName(c);
+    sel.appendChild(opt);
+  });
+  sel.value = [...cats].includes(current) ? current : 'All';
+}
+function renderHistory(){
+  populateHistoryFilter();
+  const container = document.getElementById('history-container');
+  const filterVal = document.getElementById('history-cat-filter').value;
+  const search = document.getElementById('history-search').value.trim().toLowerCase();
+
+  let filtered = logs.slice();
+  if(filterVal !== 'All') filtered = filtered.filter(l=> l.path[0]===filterVal);
+  if(search){
+    filtered = filtered.filter(l=>
+      l.path.join(' ').toLowerCase().includes(search) ||
+      (l.notes||'').toLowerCase().includes(search) ||
+      (l.tags||[]).join(' ').toLowerCase().includes(search)
+    );
+  }
+
+  container.innerHTML = '';
+  if(filtered.length===0){
+    container.innerHTML = '<div class="card empty-state"><div class="glyph">🌱</div><p>No entries match. Try a different filter, or log your first entry.</p></div>';
+    return;
+  }
+
+  filtered.forEach(log=>{
+    const div = document.createElement('div');
+    div.className = 'log-entry' + (log.baseline ? ' baseline':'');
+    let badgeHtml = '';
+    
+    // Bridge older logs using "discomfort" key to "severity" dynamically
+    const scoreVal = log.severity || log.discomfort; 
+    
+    if(log.periodStart){
+      badgeHtml = '<span class="badge mild">Period started</span>';
+    }else if(!log.baseline && scoreVal){
+      const score = parseInt(scoreVal,10);
+      badgeHtml = '<span class="badge '+severityClass(score)+'">'+severityLabel(score)+' · '+score+'/10</span>';
+    }else if(log.baseline){
+      badgeHtml = '<span class="badge mild">Symptom-free</span>';
+    }
+    const cDay = cycleDayFor(new Date(log.dateISO));
+    let html = '<div class="log-head"><div class="log-date">'+formatDisplayDate(log.dateISO)+(cDay?' · Cycle day '+cDay:'')+'</div>'+badgeHtml+'</div>';
+    
+    const displayPath = [getCategoryName(log.path[0]), ...log.path.slice(1)];
+    html += '<div class="log-path">'+escapeHTML(displayPath.join(' › '))+'</div>';
+    if(log.tags && log.tags.length){
+      html += '<div class="log-tags">'+log.tags.map(t=>'<span>'+escapeHTML(t)+'</span>').join('')+'</div>';
+    }
+    if(log.notes){
+      html += '<div class="log-notes">“'+escapeHTML(log.notes)+'”</div>';
+    }
+    div.innerHTML = html;
+
+    const actions = document.createElement('div');
+    actions.className = 'log-actions';
+    if(!log.baseline){
+      const editBtn = document.createElement('button');
+      editBtn.className = 'icon-btn'; editBtn.textContent = 'Edit';
+      editBtn.onclick = ()=> editEntry(log.id);
+      actions.appendChild(editBtn);
+    }
+    const delBtn = document.createElement('button');
+    delBtn.className = 'icon-btn danger-txt'; delBtn.textContent = 'Delete';
+    delBtn.onclick = ()=> deleteEntry(log.id);
+    actions.appendChild(delBtn);
+    div.appendChild(actions);
+
+    container.appendChild(div);
+  });
+}
+document.getElementById('history-cat-filter').addEventListener('change', renderHistory);
+document.getElementById('history-search').addEventListener('input', renderHistory);
+
+function editEntry(id){
+  const log = logs.find(l=>l.id===id);
+  if(!log) return;
+  editingId = id;
+  treeCategory = log.path[0];
+  currentPath = log.path.slice();
+  historyStack = [];
+  currentNode = 'END';
+  selectedTags = (log.tags||[]).slice();
+  goTo('log', {preserveTree:true});
+  renderMenu();
+  document.getElementById('notes-input').value = log.notes || '';
+  document.getElementById('severity-input').value = log.severity || log.discomfort || 5;
+  document.getElementById('slider-value-display').textContent = (log.severity || log.discomfort || 5) + ' / 10';
+  document.getElementById('datetime-input').value = toDatetimeLocalValue(new Date(log.dateISO));
+  renderTagChips();
+  toast('Editing entry — save to update it');
+}
+function deleteEntry(id){
+  if(!confirm('Delete this entry? This cannot be undone.')) return;
+  logs = logs.filter(l=>l.id!==id);
+  saveJSON('symptomLogs_v2', logs);
+  renderHistory();
+  toast('Entry deleted');
+}
+
+/* ============================================================
+   EXPORT / IMPORT
+   ============================================================ */
+function buildCSV(){
+  const header = ['id','date','time','category','level1','level2','level3','severity_score','severity_label','tags','cycle_day','notes'];
+  const rows = [header];
+  logs.slice().reverse().forEach(l=>{
+    const d = new Date(l.dateISO);
+    const cDay = cycleDayFor(d);
+    const scoreVal = l.severity || l.discomfort;
+    
+    rows.push([
+      l.id,
+      todayISODate(d),
+      d.toTimeString().slice(0,5),
+      getCategoryName(l.path[0]||''),
+      l.path[1]||'',
+      l.path[2]||'',
+      l.baseline ? '' : (l.path[3]||''),
+      l.baseline ? '' : (scoreVal||''),
+      l.periodStart ? 'Period started' : (l.baseline ? 'Symptom-free' : (scoreVal ? severityLabel(parseInt(scoreVal,10)) : '')),
+      (l.tags||[]).join('; '),
+      cDay || '',
+      l.notes || ''
+    ]);
+  });
+  return rows.map(r=> r.map(csvEscape).join(',')).join('\n');
+}
+function downloadBlob(content, filename, mime){
+  const blob = new Blob([content], {type:mime});
+  if(navigator.share && navigator.canShare){
+    const file = new File([blob], filename, {type:mime});
+    if(navigator.canShare({files:[file]})){
+      navigator.share({files:[file], title:filename}).catch(()=>{ fallbackDownload(blob, filename); });
+      return;
+    }
+  }
+  fallbackDownload(blob, filename);
+}
+function fallbackDownload(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=> URL.revokeObjectURL(url), 4000);
+}
+function renderBackupStatus(){
+  const el=document.getElementById('backup-status-text'); if(!el) return;
+  const stamp=localStorage.getItem('fieldnotes_last_backup');
+  if(!stamp){el.textContent='No backup recorded yet'; return;}
+  const d=new Date(stamp); const age=Math.floor((Date.now()-d.getTime())/86400000);
+  el.textContent='Last backup '+d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})+(age>30?' · due for a refresh':'');
+  const icon=document.getElementById('backup-status-icon'); if(icon) icon.textContent=age<=7?'✓':age<=30?'△':'!';
+}
+
+function exportCSV(){
+  downloadBlob(buildCSV(), 'fieldnotes-export-'+todayISODate()+'.csv', 'text/csv');
+  toast('CSV exported');
+}
+function exportJSON(){
+  const backup = { version:4, exportedAt:new Date().toISOString(), logs, dynamicTree, settings };
+  downloadBlob(JSON.stringify(backup,null,2), 'fieldnotes-backup-'+todayISODate()+'.json', 'application/json');
+  localStorage.setItem('fieldnotes_last_backup',new Date().toISOString());
+  renderBackupStatus();
+  toast('Backup exported');
+}
+document.getElementById('export-csv-btn').onclick = exportCSV;
+document.getElementById('export-json-btn').onclick = exportJSON;
+document.getElementById('settings-export-btn').onclick = exportJSON;
+document.getElementById('settings-import-btn').onclick = ()=> document.getElementById('import-file-input').click();
+document.getElementById('import-file-input').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    try{
+      const data = JSON.parse(evt.target.result);
+      if(!Array.isArray(data.logs)) throw new Error('Invalid file');
+      if(!confirm('Import will merge '+data.logs.length+' entries into your current history. Continue?')) return;
+      const existingIds = new Set(logs.map(l=>l.id));
+      data.logs.forEach(l=>{ if(!existingIds.has(l.id)) logs.push(l); });
+      logs.sort((a,b)=> new Date(b.dateISO) - new Date(a.dateISO));
+      if(data.dynamicTree) dynamicTree = deepMerge(dynamicTree, data.dynamicTree);
+      if(data.settings && data.settings.categoryNames) settings.categoryNames = { ...settings.categoryNames, ...data.settings.categoryNames };
+      saveJSON('symptomLogs_v2', logs);
+      saveJSON('symptomCustomTree_v4', dynamicTree);
+      saveJSON('trackerSettings_v1', settings);
+      updateCatButtons();
+      toast('Backup imported ✓');
+      renderHistory();
+    }catch(err){
+      alert("Could not read that file — make sure it's a Fieldnotes backup JSON.");
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+function deepMerge(base, incoming){
+  Object.keys(incoming).forEach(k=>{
+    if(Array.isArray(incoming[k])){
+      base[k] = Array.isArray(base[k]) ? [...new Set([...base[k], ...incoming[k]])] : incoming[k];
+    }else if(typeof incoming[k]==='object' && incoming[k]!==null){
+      base[k] = deepMerge(base[k] && typeof base[k]==='object' ? base[k] : {}, incoming[k]);
+    }else if(!(k in base)){
+      base[k] = incoming[k];
+    }
+  });
+  return base;
+}
+
+/* ============================================================
+   INSIGHTS / CHARTS  (hand-built inline SVG, no libraries)
+   ============================================================ */
+const AREA_PALETTE = ['--teal','--berry','--gold','--clay','--plum','--rose','--slate','--sage-mild','--moss','--amber'];
+const AREA_COLOR_MAP = {
+  "Head & Neck":'--teal',
+  "Chest & Torso":'--berry',
+  "Back & Spine":'--slate',
+  "Arms & Hands":'--gold',
+  "Legs & Feet":'--clay',
+  "Pelvis & Groin":'--plum',
+  "Flow Level":'--rose',
+  "Mood & Emotional":'--sage-mild',
+  "Systemic & Other":'--moss'
+};
+function colorForArea(label){
+  if(AREA_COLOR_MAP[label]) return 'var('+AREA_COLOR_MAP[label]+')';
+  let hash = 0;
+  for(let i=0;i<label.length;i++) hash = (hash*31 + label.charCodeAt(i)) >>> 0;
+  return 'var('+AREA_PALETTE[hash % AREA_PALETTE.length]+')';
+}
+function renderInsights(){
+  renderTodayIssues();
+  renderFrequencyChart();
+  renderHeatmap();
+  renderPatternInsights();
+  renderWhatChanged();
+  renderRecurringPatterns();
+  renderCycleComparison();
+}
+function renderPatternInsights(){
+  const box=document.getElementById('pattern-insights');
+  if(!box) return;
+  const symptoms=logs.filter(l=>!l.baseline && !l.periodStart);
+  if(symptoms.length<3){
+    box.innerHTML='<div class="insight-callout"><strong>Build your picture.</strong><p>Keep logging normally. Once there are a few entries, Fieldnotes will compare frequency, areas, triggers and timing to surface recurring patterns.</p></div>';
+    return;
+  }
+  const recent=symptoms.filter(l=>Date.now()-new Date(l.dateISO).getTime()<=7*86400000);
+  const areaCounts={}, triggerCounts={};
+  symptoms.forEach(l=>{
+    const area=l.path[1]||getCategoryName(l.path[0]); areaCounts[area]=(areaCounts[area]||0)+1;
+    (l.tags||[]).forEach(t=>triggerCounts[t]=(triggerCounts[t]||0)+1);
+  });
+  const topArea=Object.entries(areaCounts).sort((a,b)=>b[1]-a[1])[0];
+  const topTrigger=Object.entries(triggerCounts).sort((a,b)=>b[1]-a[1])[0];
+  let html='';
+  if(topArea){
+    const pct=Math.round(topArea[1]/symptoms.length*100);
+    html+='<div class="insight-callout"><strong>'+escapeHTML(topArea[0])+' is showing up most often.</strong><p>'+topArea[1]+' of '+symptoms.length+' symptom entries ('+pct+'%) mention this area.</p></div>';
+  }
+  if(topTrigger){
+    const pct=Math.round(topTrigger[1]/symptoms.length*100);
+    html+='<div class="insight-callout"><strong>'+escapeHTML(topTrigger[0])+' is your most selected trigger.</strong><p>It appears with '+topTrigger[1]+' entries ('+pct+'%). This is an association, not proof that the trigger caused the symptom.</p></div>';
+  }
+  let cycleHtml='';
+  if(settings.cycleAnchor && settings.profile!=='male'){
+    const byDay={};
+    symptoms.forEach(l=>{const d=cycleDayFor(new Date(l.dateISO)); if(d){if(!byDay[d])byDay[d]=[];byDay[d].push(l);}});
+    const cycleEntries=Object.entries(byDay).filter(([,arr])=>arr.length>=2).sort((a,b)=>b[1].length-a[1].length)[0];
+    if(cycleEntries){cycleHtml='<div class="insight-callout"><strong>Cycle timing worth watching.</strong><p>Day '+cycleEntries[0]+' has '+cycleEntries[1].length+' logged symptom entries. More cycles are needed before treating this as a recurring pattern.</p></div>'; }
+  }
+  html+=cycleHtml;
+  html+='<div class="insight-grid"><div class="mini-stat"><strong>'+recent.length+'</strong><span>symptoms · 7 days</span></div><div class="mini-stat"><strong>'+new Set(recent.map(l=>todayISODate(new Date(l.dateISO)))).size+'</strong><span>active days</span></div></div>';
+  box.innerHTML=html;
+}
+
+function renderWhatChanged(){
+  const box=document.getElementById('what-changed'); if(!box) return;
+  const now=Date.now(), week=7*86400000;
+  const current=logs.filter(l=>!l.baseline&&!l.periodStart&&now-new Date(l.dateISO).getTime()<=week);
+  const previous=logs.filter(l=>!l.baseline&&!l.periodStart&&now-new Date(l.dateISO).getTime()>week&&now-new Date(l.dateISO).getTime()<=2*week);
+  const countByArea=arr=>{const o={};arr.forEach(l=>{const k=l.path[1]||getCategoryName(l.path[0]);o[k]=(o[k]||0)+1});return o};
+  const a=countByArea(current), b=countByArea(previous), keys=[...new Set([...Object.keys(a),...Object.keys(b)])];
+  const changes=keys.map(k=>({k,d:(a[k]||0)-(b[k]||0),c:a[k]||0,p:b[k]||0})).filter(x=>x.d!==0).sort((x,y)=>Math.abs(y.d)-Math.abs(x.d)).slice(0,3);
+  if(!current.length){box.innerHTML='<p class="subtle">No symptom entries in the last 7 days.</p>';return;}
+  if(!previous.length){box.innerHTML='<div class="insight-callout"><strong>This is your first comparison window.</strong><p>Keep logging and Fieldnotes will show what has increased or decreased compared with the previous 7 days.</p></div>';return;}
+  box.innerHTML=changes.length?changes.map(x=>'<div class="insight-row"><strong>'+escapeHTML(x.k)+'</strong><span>'+(x.d>0?'↑ '+x.d+' more':'↓ '+Math.abs(x.d)+' fewer')+'</span><small>'+x.c+' this week · '+x.p+' previous week</small></div>').join(''):'<p class="subtle">No meaningful change in the areas you logged.</p>';
+}
+function renderRecurringPatterns(){
+  const box=document.getElementById('recurring-patterns'); if(!box) return;
+  const symptoms=logs.filter(l=>!l.baseline&&!l.periodStart);
+  if(symptoms.length<5){box.innerHTML='<p class="subtle">Keep logging. Recurring patterns will appear here once there is enough history to compare.</p>';return;}
+  const counts={}; symptoms.forEach(l=>(l.tags||[]).forEach(t=>{counts[t]=(counts[t]||0)+1;}));
+  const top=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  box.innerHTML=top.length?top.map(([t,n])=>'<div class="insight-row"><strong>'+escapeHTML(t)+'</strong><span>'+Math.round(n/symptoms.length*100)+'%</span><small>selected with '+n+' of '+symptoms.length+' symptom entries · association only</small></div>').join(''):'<p class="subtle">No repeated trigger patterns yet.</p>';
+}
+function renderCycleComparison(){
+  const card=document.getElementById('cycle-comparison-card'), box=document.getElementById('cycle-comparison'); if(!card||!box)return;
+  if(settings.profile==='male'){card.style.display='none'; box.innerHTML=''; return;}
+  const starts=logs.filter(l=>l.periodStart).sort((a,b)=>new Date(a.dateISO)-new Date(b.dateISO));
+  if(starts.length<2){card.style.display='none';return;}
+  card.style.display='block';
+  const currentStart=new Date(starts[starts.length-1].dateISO), prevStart=new Date(starts[starts.length-2].dateISO);
+  const inCycle=(start,end)=>logs.filter(l=>!l.baseline&&!l.periodStart&&new Date(l.dateISO)>=start&&(!end||new Date(l.dateISO)<end));
+  const current=inCycle(currentStart,new Date()), previous=inCycle(prevStart,currentStart);
+  const unique=a=>new Set(a.map(l=>l.path.slice(1,3).join(' · '))).size;
+  box.innerHTML='<div class="insight-grid"><div class="mini-stat"><strong>'+current.length+'</strong><span>current-cycle symptoms</span></div><div class="mini-stat"><strong>'+previous.length+'</strong><span>previous-cycle symptoms</span></div></div><p class="subtle" style="margin-top:10px;">Distinct symptom types: '+unique(current)+' current cycle vs '+unique(previous)+' previous cycle. More cycles are needed before treating this as a recurring pattern.</p>';
+}
+
+function renderTodayIssues(){
+  const box = document.getElementById('today-issues');
+  const key = todayISODate();
+  const todays = logs.filter(l=> todayISODate(new Date(l.dateISO)) === key)
+                      .slice().sort((a,b)=> new Date(a.dateISO)-new Date(b.dateISO));
+  if(todays.length===0){
+    box.innerHTML = '<p class="subtle">Nothing logged yet today.</p>';
+    return;
+  }
+  const symptomEntries = todays.filter(l=>!l.baseline && !l.periodStart);
+  let html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+  todays.forEach(l=>{
+    const time = new Date(l.dateISO).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+    if(l.baseline){
+      html += '<div style="display:flex;align-items:center;gap:10px;">'+
+        '<span class="subtle" style="width:52px;flex-shrink:0;">'+time+'</span>'+
+        '<span class="badge mild">Symptom-free</span>'+
+      '</div>';
+    }else{
+      const scoreVal = l.severity || l.discomfort;
+      const score = scoreVal ? parseInt(scoreVal,10) : null;
+      const badge = score ? '<span class="badge '+severityClass(score)+'">'+severityLabel(score)+' · '+score+'/10</span>' : '';
+      const label = l.path.slice(1).join(' › ') || getCategoryName(l.path[0]);
+      const tags = (l.tags && l.tags.length) ? ' <span class="subtle">— '+escapeHTML(l.tags.join(', '))+'</span>' : '';
+      html += '<div style="display:flex;align-items:flex-start;gap:10px;">'+
+        '<span class="subtle" style="width:52px;flex-shrink:0;padding-top:2px;">'+time+'</span>'+
+        '<div style="flex:1;">'+
+          '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;"><strong style="font-size:13.5px;">'+escapeHTML(label)+'</strong>'+badge+'</div>'+
+          (tags ? '<div style="font-size:12px;margin-top:2px;">'+tags+'</div>' : '') +
+        '</div>'+
+      '</div>';
+    }
+  });
+  html += '</div>';
+  if(symptomEntries.length===0 && todays.length>0){
+    html += '<p class="subtle" style="margin-top:10px;">No symptoms logged today ✓</p>';
+  }
+  box.innerHTML = html;
+}
+function renderFrequencyChart(){
+  const box = document.getElementById('chart-frequency');
+  const counts = {};
+  logs.forEach(l=>{
+    if(l.baseline || l.periodStart) return;
+    const key = l.path[1] || getCategoryName(l.path[0]);
+    counts[key] = (counts[key]||0)+1;
+  });
+  const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(entries.length===0){ box.innerHTML = '<p class="subtle">No symptom entries logged yet.</p>'; return; }
+  const max = entries[0][1];
+  let html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+  entries.forEach(([label,count])=>{
+    const pct = Math.max(6, Math.round((count/max)*100));
+    const color = colorForArea(label);
+    html += '<div>'+
+      '<div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px;"><span>'+escapeHTML(label)+'</span><span class="subtle">'+count+'</span></div>'+
+      '<div style="background:var(--moss-pale);border-radius:6px;height:9px;overflow:hidden;"><div style="background:'+color+';width:'+pct+'%;height:100%;"></div></div>'+
+    '</div>';
+  });
+  html += '</div>';
+  const legendItems = entries.map(([label])=> '<span><i style="background:'+colorForArea(label)+';"></i>'+escapeHTML(label)+'</span>').join('');
+  html += '<div class="legend">'+legendItems+'</div>';
+  box.innerHTML = html;
+}
+function renderHeatmap(){
+  const box = document.getElementById('chart-heatmap');
+  const days = [];
+  for(let i=41;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    days.push(d);
+  }
+  const countByDay = {};
+  logs.forEach(l=>{
+    const key = todayISODate(new Date(l.dateISO));
+    countByDay[key] = (countByDay[key]||0)+1;
+  });
+  const maxCount = Math.max(1, ...Object.values(countByDay));
+  let html = '<div style="display:grid;grid-template-columns:repeat(14,1fr);gap:4px;">';
+  days.forEach(d=>{
+    const key = todayISODate(d);
+    const c = countByDay[key]||0;
+    const alpha = c===0 ? 0 : 0.25 + 0.75*(c/maxCount);
+    const bg = c===0 ? 'var(--border)' : 'rgba(63,107,84,'+alpha.toFixed(2)+')';
+    html += '<div title="'+key+': '+c+' entr'+(c===1?'y':'ies')+'" style="aspect-ratio:1;border-radius:4px;background:'+bg+';"></div>';
+  });
+  html += '</div>';
+  box.innerHTML = html;
+}
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+function renderSettings(){
+  renderBackupStatus();
+  const isFemale = settings.profile !== 'male';
+  document.getElementById('profile-female-btn').style.outline = isFemale ? '2px solid var(--moss)' : 'none';
+  document.getElementById('profile-male-btn').style.outline = !isFemale ? '2px solid var(--moss)' : 'none';
+  document.getElementById('cycle-settings-card').style.display = isFemale ? 'block' : 'none';
+  document.getElementById('reminder-toggle').checked = !!settings.reminderEnabled;
+  document.getElementById('reminder-time').value = settings.reminderTime || '20:00';
+  document.getElementById('reminder-time-row').style.display = settings.reminderEnabled ? 'flex' : 'none';
+  document.getElementById('cycle-anchor-desc').textContent = settings.cycleAnchor
+    ? new Date(settings.cycleAnchor+'T00:00:00').toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})
+    : 'Not set';
+  document.getElementById('cycle-anchor-input').value = settings.cycleAnchor || '';
+  document.getElementById('cycle-length-input').value = settings.cycleLength || 28;
+  document.getElementById('share-hint').style.display = (navigator.share ? 'block':'none');
+}
+document.getElementById('reminder-toggle').addEventListener('change', function(){
+  settings.reminderEnabled = this.checked;
+  saveJSON('trackerSettings_v1', settings);
+  document.getElementById('reminder-time-row').style.display = this.checked ? 'flex':'none';
+  if(this.checked && 'Notification' in window && Notification.permission==='default'){
+    Notification.requestPermission();
+  }
+});
+document.getElementById('reminder-time').addEventListener('change', function(){
+  settings.reminderTime = this.value;
+  saveJSON('trackerSettings_v1', settings);
+});
+function setProfile(p){
+  settings.profile = p;
+  saveJSON('trackerSettings_v1', settings);
+  if(p==='male' && treeCategory==='Cycle') resetTree('Physical');
+  if(p==='male') {
+    const cycleCard=document.getElementById('cycle-day-card'); if(cycleCard) cycleCard.style.display='none';
+    const periodBtn=document.getElementById('home-period-start'); if(periodBtn) periodBtn.style.display='none';
+  }
+  renderSettings();
+  updateCatButtons();
+  renderHome();
+  renderInsights();
+  toast('Profile updated');
+}
+document.getElementById('profile-female-btn').onclick = ()=> setProfile('female');
+document.getElementById('profile-male-btn').onclick = ()=> setProfile('male');
+
+document.getElementById('cycle-anchor-save').onclick = function(){
+  const anchorVal = document.getElementById('cycle-anchor-input').value;
+  const lengthVal = document.getElementById('cycle-length-input').value;
+  
+  if(anchorVal) settings.cycleAnchor = anchorVal;
+  if(lengthVal) settings.cycleLength = parseInt(lengthVal);
+  
+  saveJSON('trackerSettings_v1', settings);
+  renderSettings();
+  toast('Cycle data saved');
+};
+document.getElementById('clear-btn').onclick = function(){
+  if(confirm('Delete all tracked history? This cannot be undone. Consider exporting a backup first.')){
+    logs = [];
+    saveJSON('symptomLogs_v2', logs);
+    renderHistory();
+    toast('History cleared');
+  }
+};
+
+/* ============================================================
+   REMINDER CHECK 
+   ============================================================ */
+function checkReminder(){
+  if(!settings.reminderEnabled) return;
+  const now = new Date();
+  const [h,m] = (settings.reminderTime||'20:00').split(':').map(Number);
+  if(now.getHours()!==h || now.getMinutes()!==m) return;
+  const loggedToday = logs.some(l=> todayISODate(new Date(l.dateISO)) === todayISODate());
+  if(loggedToday) return;
+  if('Notification' in window && Notification.permission==='granted'){
+    new Notification('Fieldnotes', {body:"You haven't logged anything today."});
+  }else{
+    toast("Reminder: you haven't logged anything today");
+  }
+}
+setInterval(checkReminder, 60000);
+
+/* ============================================================
+   PWA — manifest + home screen install prompt
+   ============================================================ */
+(function setupManifest(){
+  const iconSVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="%233F6B54"/><path d="M96 40c-30 20-46 46-46 76 0 24 20 40 46 40s46-16 46-40c0-30-16-56-46-76z" fill="%23F4F6F2"/></svg>';
+  const iconURI = 'data:image/svg+xml,'+iconSVG;
+  const manifest = {
+    name:"Fieldnotes — Symptom & Cycle Tracker",
+    short_name:"Fieldnotes",
+    start_url:".",
+    display:"standalone",
+    background_color:"#F4F6F2",
+    theme_color:"#3F6B54",
+    icons:[{src:iconURI, sizes:"192x192", type:"image/svg+xml", purpose:"any"}]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+  const link = document.createElement('link');
+  link.rel = 'manifest';
+  link.href = URL.createObjectURL(blob);
+  document.head.appendChild(link);
+})();
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.getElementById('install-btn').style.display = 'block';
+  document.getElementById('install-hint').textContent = "Install Fieldnotes for quick, full-screen access from your home screen.";
+});
+document.getElementById('install-btn').addEventListener('click', async ()=>{
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  document.getElementById('install-btn').style.display = 'none';
+});
+
+/* ============================================================
+   MISC
+   ============================================================ */
+function escapeHTML(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+resetTree('Physical');
+renderBackupStatus();
+goTo('home');
+
+})();
+</script>
+</body>
+</html>
